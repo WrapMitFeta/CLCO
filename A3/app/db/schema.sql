@@ -1,0 +1,8 @@
+DROP TABLE IF EXISTS message;
+
+CREATE TABLE message (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    created TIMESTAMP NOT NULL,
+    person TEXT NOT NULL,
+    text TEXT NOT NULL
+)

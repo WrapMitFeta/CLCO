@@ -1,0 +1,70 @@
+<!doctype html>
+
+<head>
+  <title>CLCO</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
+  <script src="https://unpkg.com/htmx.org@1.5.0"></script>
+  <script>
+    function closeModal() {
+      var container = document.getElementById("modals-here")
+      var backdrop = document.getElementById("modal-backdrop")
+      var modal = document.getElementById("modal")
+
+      modal.classList.remove("show")
+      backdrop.classList.remove("show")
+
+      setTimeout(function () {
+        container.removeChild(backdrop)
+        container.removeChild(modal)
+      }, 200)
+    }
+  </script>
+</head>
+<html>
+
+<body>
+  <main>
+    <div class="px-4 py-3 my-2 text-center">
+      <img class="d-block mx-auto mb-4" src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" />
+    </div>
+
+    <div class="grid row-gap-3 col-md-6 mb-4 mx-auto text-center">
+
+      <h3 class="p-2 g-col-6 fw-bold fs-5">Tell me your name and message!</h3>
+      <form class="p-2 g-col-6">
+        <input type="text" placeholder="Name" name="name" class="form-control mb-3" />
+        <input type="text" placeholder="Message" name="message" class="form-control mb-3" />
+        <button type="submit" class="btn btn-primary" hx-post="/hello" hx-trigger="click" hx-target="#message-data"
+          hx-swap="beforeend">Submit</button>
+      </form>
+
+
+      <div id="modals-here"></div>
+
+      <h3 class="p-2 g-col-6 fw-bold fs-5">We had the following visitors</h3>
+      <p class="fw-bold">Mood of the last ten visitors
+        <button hx-get="/sentiment" hx-target="#modals-here" hx-trigger="click" 
+          class="btn btn-outline-primary btn-sm"
+          _="on htmx:afterOnLoad wait 10ms then add .show to #modal then add .show to #modal-backdrop">
+          Analyse sentiment
+        </button>
+      </p>
+      <div class='people p-2 g-col-6'>
+        <table class="table table-sm table-bordered">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Message</th>
+              <th>Visited</th>
+            </tr>
+          </thead>
+          <tbody id="message-data" hx-get="/messages" hx-trigger="load" hx-swap="beforeend">
+
+          </tbody>
+        </table>
+      </div>
+
+  </main>
+</body>
+
+</html>

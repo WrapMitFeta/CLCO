@@ -1,0 +1,103 @@
+name: clco-demo
+description: A minimal Azure Native Pulumi YAML program
+runtime: yaml
+resources:
+  resourceGroup:
+    type: azure-native:resources:ResourceGroup
+    properties:
+      location: ${azure-native:location}
+
+  sa:
+    type: azure-native:storage:StorageAccount
+    properties:
+      resourceGroupName: ${resourceGroup.name}
+      location: ${resourceGroup.location}
+      accountName: ${storageAccountName}
+      sku:
+        name: ${storageSku}
+      kind: StorageV2
+      allowBlobPublicAccess: true
+
+  # Blob Container
+  blobContainer:
+    type: azure-native:storage:BlobContainer
+    properties:
+      resourceGroupName: ${resourceGroup.name}
+      accountName: ${sa.name}
+      containerName: ${blobContainerName}
+      publicAccess: "Blob"
+
+  # Upload app files to blob
+  appBlob:
+    type: azure-native:storage:Blob
+    properties:
+      type: Block
+      resourceGroupName: ${resourceGroup.name}
+      accountName: ${sa.name}
+      containerName: ${blobContainer.name}
+      blobName: ${blobName}
+      source:
+        fn::fileAsset: "./Archive.zip"
+
+  appServicePlan:
+    type: azure-native:web:AppServicePlan
+    properties:
+      resourceGroupName: ${resourceGroup.name}
+      name: "service-plan"
+      location: ${resourceGroup.location}
+      sku:
+        name: "B1"
+        tier: "Basic"
+      kind: "Linux"
+      reserved: true
+
+  # Web App
+  webApp:
+    type: azure-native:web:WebApp
+    properties:
+      publicNetworkAccess: Enabled
+      resourceGroupName: ${resourceGroup.name}
+      location: ${resourceGroup.location}
+      serverFarmId: ${appServicePlan.id}
+      siteConfig:
+        linuxFxVersion: "PYTHON|3.13"
+        appSettings:
+          - name: WEBSITE_RUN_FROM_PACKAGE
+            value: https://${storageAccountName}.blob.core.windows.net/${blobContainerName}/${blobName}
+        appCommandLine: "pip install -r /home/site/wwwroot/requirements.txt && gunicorn -w 3 -b 0.0.0.0:8000 app:app"
+      clientAffinityEnabled: false
+      httpsOnly: true
+
+variables:
+  storageAccountKeys:
+    fn::azure-native:storage:listStorageAccountKeys:
+      resourceGroupName: ${resourceGroup.name}
+      accountName: ${sa.name}
+
+outputs:
+  # Export the primary key of the Storage Account
+  primaryStorageKey: ${storageAccountKeys.keys[0].value}
+  staticEndpoint: ${sa.primaryEndpoints.web}
+  webappUrl:
+    value: https://${webApp.defaultHostName}
+  resourceGroup: ${resourceGroup.name}
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: azure-yaml
+  azure-native:location: WestUS
+  storageAccountName:
+    type: string
+    default: sacf7eb26h
+  storageLocation:
+    type: string
+    default: WestUS
+  storageSku:
+    type: string
+    default: Standard_LRS
+  blobContainerName:
+    type: string
+    default: cool-container
+  blobName:
+    type: string
+    default: cool-blob.zip
