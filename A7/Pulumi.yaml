@@ -1,0 +1,11 @@
+name: A7
+description: 'Commmunication: Enabling sentiment analysis'
+runtime:
+  name: python
+  options:
+    toolchain: pip
+    virtualenv: venv
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: azure-python
