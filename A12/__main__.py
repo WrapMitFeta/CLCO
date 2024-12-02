@@ -76,16 +76,6 @@ security_rule = network.SecurityRule(
     protocol=network.SecurityRuleProtocol.TCP,
 )
 
-public_ip = network.PublicIPAddress(
-    "public-ip",
-    resource_group_name=resource_group.name,
-    public_ip_address_name="public-ip",
-    sku=network.PublicIPAddressSkuArgs(
-        name="Standard",
-    ),
-    public_ip_allocation_method=network.IpAllocationMethod.STATIC,
-)
-
 nic = network.NetworkInterface(
     "nic",
     resource_group_name=resource_group_name,

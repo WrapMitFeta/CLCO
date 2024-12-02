@@ -14,15 +14,15 @@ resource_group = resources.ResourceGroup(
     location="westeurope",
 )
 
-subnet_name = f"{resource_group_name}-subnet"
-nsg_name = f"{resource_group_name}-nsg"
-v_net_name = f"{resource_group_name}-vnet"
-
-# Step 1: Create a Virtual Network and Subnet
 vnet = network.VirtualNetwork(
     "v-net",
-    resource_group_name=resource_group.name,
-    virtual_network_name=v_net_name,
+    resource_group_name=resource_group.name.apply(
+        lambda name: name,
+    ),
+    virtual_network_name=pulumi.Output.concat(
+        resource_group.name,
+        "-vnet",
+    ),
     address_space=network.AddressSpaceArgs(
         address_prefixes=["10.0.0.0/16"],
     ),
@@ -32,13 +32,19 @@ subnet = network.Subnet(
     "subnet",
     resource_group_name=resource_group.name,
     virtual_network_name=vnet.name,
-    subnet_name=subnet_name,
+    subnet_name=pulumi.Output.concat(
+        resource_group.name,
+        "-subnet",
+    ),
     address_prefix="10.0.1.0/24",
 )
 
 network_security_group = network.NetworkSecurityGroup(
     "network-security-group",
-    network_security_group_name=nsg_name,
+    network_security_group_name=pulumi.Output.concat(
+        resource_group.name,
+        "-nsg",
+    ),
     resource_group_name=resource_group.name,
     location=resource_group.location,
 )
@@ -46,7 +52,9 @@ network_security_group = network.NetworkSecurityGroup(
 security_rule = network.SecurityRule(
     "security-rule",
     name="allow-80-inbound",
-    network_security_group_name=nsg_name,
+    network_security_group_name=network_security_group.name.apply(
+        lambda name: name,
+    ),
     resource_group_name=resource_group.name,
     priority=110,
     source_address_prefix="*",
@@ -146,41 +154,47 @@ for i in range(1, 3):
         )
     )
 
+vms = []
+
 for i in range(1, 3):
-    compute.VirtualMachine(
-        f"vm-{i}",
-        resource_group_name=resource_group.name,
-        vm_name=f"vm-{i}",
-        network_profile={
-            "network_interfaces": [
-                {
-                    "id": nics[i - 1].id,
-                }
-            ],
-        },
-        hardware_profile=compute.HardwareProfileArgs(
-            vm_size=compute.VirtualMachineSizeTypes.STANDARD_DS1_V2,
-        ),
-        storage_profile=compute.StorageProfileArgs(
-            image_reference=compute.ImageReferenceArgs(
-                publisher="Canonical",
-                offer="0001-com-ubuntu-server-jammy",
-                sku="22_04-lts",
-                version="latest",
+    vms.append(
+        compute.VirtualMachine(
+            f"vm-{i}",
+            resource_group_name=resource_group.name,
+            vm_name=f"vm-{i}",
+            network_profile={
+                "network_interfaces": [
+                    {
+                        "id": nics[i - 1].id,
+                    }
+                ],
+            },
+            hardware_profile=compute.HardwareProfileArgs(
+                vm_size=compute.VirtualMachineSizeTypes.STANDARD_DS1_V2,
             ),
-        ),
-        os_profile=compute.OSProfileArgs(
-            computer_name=f"vm-{i}",
-            admin_username="adminuser",
-            admin_password="Password@secure1234!",
-        ),
+            storage_profile=compute.StorageProfileArgs(
+                image_reference=compute.ImageReferenceArgs(
+                    publisher="Canonical",
+                    offer="0001-com-ubuntu-server-jammy",
+                    sku="22_04-lts",
+                    version="latest",
+                ),
+            ),
+            os_profile=compute.OSProfileArgs(
+                computer_name=f"vm-{i}",
+                admin_username="adminuser",
+                admin_password="Password@secure1234!",
+            ),
+        )
     )
 
 for i in range(1, 3):
     compute.VirtualMachineExtension(
         f"vm-extension-{i}",
         resource_group_name=resource_group.name,
-        vm_name=f"vm-{i}",
+        vm_name=vms[i - 1].name.apply(
+            lambda name: name,
+        ),
         vm_extension_name=f"vm-extension-{i}",
         publisher="Microsoft.Azure.Extensions",
         type="CustomScript",
