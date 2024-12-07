@@ -24,7 +24,7 @@ client = AuthorizationManagementClient(
 )
 
 
-# Use $filter=principalId eq {id} to return all role
+# Use $filter=principalId eq {id} to return all roles
 response = client.role_assignments.list_for_subscription(
     filter=f"principalId eq '{user.object_id}'"
 )
