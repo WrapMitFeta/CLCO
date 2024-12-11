@@ -13,6 +13,7 @@ from pulumi_azuread import get_user
 import pulumi_azure_native.authorization as auth
 
 subscription_id = "f0225753-f6de-42b8-b862-8c4003ccf2be"
+vm_count = 2
 
 # Create an Azure Resource Group
 resource_group = resources.ResourceGroup(
@@ -44,6 +45,16 @@ vnet = network.VirtualNetwork(
     ),
 )
 
+# Create a Network Security Group
+network_security_group = network.NetworkSecurityGroup(
+    "network-security-group",
+    network_security_group_name=pulumi.Output.concat(
+        resource_group.name,
+        "-nsg",
+    ),
+    resource_group_name=resource_group.name,
+)
+
 # Create a subnet within the VNet
 subnet = network.Subnet(
     "subnet",
@@ -54,17 +65,11 @@ subnet = network.Subnet(
         "-subnet",
     ),
     address_prefix="10.0.1.0/24",
+    network_security_group=network.NetworkSecurityGroupArgs(
+        id=network_security_group.id,
+    ),
 )
 
-# Create a Network Security Group
-network_security_group = network.NetworkSecurityGroup(
-    "network-security-group",
-    network_security_group_name=pulumi.Output.concat(
-        resource_group.name,
-        "-nsg",
-    ),
-    resource_group_name=resource_group.name,
-)
 
 # Create a Security Rule within the Network Security Group
 security_rule = network.SecurityRule(
@@ -94,6 +99,11 @@ public_ip = network.PublicIPAddress(
         name=network.PublicIPAddressSkuName.STANDARD,
     ),
     public_ip_allocation_method=network.IpAllocationMethod.STATIC,
+    zones=[
+        "1",
+        "2",
+        "3",
+    ],
 )
 
 
@@ -174,7 +184,7 @@ load_balancer = network.LoadBalancer(
 # Create Network Interfaces
 nics = []
 
-for i in range(1, 3):
+for i in range(1, vm_count + 1):
     nics.append(
         network.NetworkInterface(
             f"nic-{i}",
@@ -204,7 +214,7 @@ for i in range(1, 3):
 # Create Storage Disks
 disks = []
 
-for i in range(1, 3):
+for i in range(1, vm_count + 1):
     disks.append(
         compute.Disk(
             f"disk{i}",
@@ -213,7 +223,7 @@ for i in range(1, 3):
             sku=compute.DiskSkuArgs(
                 name=compute.DiskStorageAccountTypes.PREMIUM_LRS,
             ),
-            disk_size_gb=1024,
+            disk_size_gb=128,
             creation_data=compute.CreationDataArgs(
                 create_option=compute.DiskCreateOptionTypes.EMPTY,
             ),
@@ -223,7 +233,7 @@ for i in range(1, 3):
 # Create Virtual Machines
 vms = []
 
-for i in range(1, 3):
+for i in range(1, vm_count + 1):
     vms.append(
         compute.VirtualMachine(
             f"vm-{i}",
@@ -277,7 +287,7 @@ for i in range(1, 3):
     )
 
 # Create Virtual Machine Extensions for Nginx
-for i in range(1, 3):
+for i in range(1, vm_count + 1):
     compute.VirtualMachineExtension(
         f"vm-extension-{i}",
         resource_group_name=resource_group.name,
