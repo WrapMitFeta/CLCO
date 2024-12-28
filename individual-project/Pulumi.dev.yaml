@@ -1,0 +1,12 @@
+config:
+  individual-project:k8sVersion: 1.30.6
+  individual-project:nodeCount: 2
+  individual-project:nodeSize: Standard_D2s_v3
+  individual-project:adminUser: aksadmin
+  individual-project:ingressNamespace: ingress-nginx
+  individual-project:appNamespace: linkstack
+  individual-project:db_login_password: YourSecurePassword123!
+  individual-project:regions:
+    - eastus
+    - westus
+    - northeurope

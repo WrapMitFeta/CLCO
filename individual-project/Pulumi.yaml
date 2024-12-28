@@ -1,0 +1,11 @@
+name: individual-project
+description: Individual Project Group 10
+runtime:
+  name: python
+  options:
+    toolchain: pip
+    virtualenv: venv
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: kubernetes-azure-python

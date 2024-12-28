@@ -83,6 +83,7 @@ lang_service_account = cognitiveservices.Account(
     properties=cognitiveservices.AccountPropertiesArgs(
         public_network_access=cognitiveservices.PublicNetworkAccess.DISABLED,
         custom_sub_domain_name="PaaS-Group-10-language-account-sub-domain",
+        restore=True,
     ),
 )
 

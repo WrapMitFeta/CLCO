@@ -304,7 +304,6 @@ for i in range(1, vm_count + 1):
         },
     )
 
-
 # Create Role Assignments for Team Members
 team_member_1_email = "wi22b114@technikum-wien.at"
 team_member_2_email = "wi22b075@technikum-wien.at"
