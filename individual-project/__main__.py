@@ -363,7 +363,7 @@ def deploy_in_region(region, index):
     )
 
     # Add Horizontal Pod Autoscaler (HPA) for Deployment
-    hpa = k8s.autoscaling.v2.HorizontalPodAutoscaler(
+    k8s.autoscaling.v2.HorizontalPodAutoscaler(
         f"hpa-{index}",
         metadata=k8s.meta.v1.ObjectMetaArgs(
             name=f"linkstack-hpa-{index}",
@@ -423,7 +423,7 @@ def deploy_in_region(region, index):
     )
 
     # Create Azure Kubernetes Ingress for Application
-    linkstack_ingress = k8s.networking.v1.Ingress(
+    k8s.networking.v1.Ingress(
         f"linkstack-ingress-{index}",
         metadata=k8s.meta.v1.ObjectMetaArgs(
             namespace=app_namespace,
