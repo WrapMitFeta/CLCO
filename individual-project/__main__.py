@@ -376,7 +376,7 @@ def deploy_in_region(region, index):
                 name=linkstack_deployment.metadata.name,
             ),
             min_replicas=1,
-            max_replicas=3,
+            max_replicas=2,
             metrics=[
                 k8s.autoscaling.v2.MetricSpecArgs(
                     type="Resource",
